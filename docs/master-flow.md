@@ -1,6 +1,3 @@
-# Telegram Bot — MASTER FLOW (единая диаграмма)
-
-```mermaid
 flowchart TD
 
   %% =====================
@@ -9,15 +6,16 @@ flowchart TD
   A[/\/start/] --> MENU{Главное меню}
 
   MENU --> MARKET[MARKET ACC]
-  MENU --> SMM[SM MAKRET]
+  MENU --> SMM[SM MARKET]
   MENU --> VPN[VPN]
   MENU --> PROXY[PROXY]
+  MENU --> WHEEL[Крутилка (Mini App)]
   MENU --> PROFILE[Профиль]
 
   %% =====================
   %% PROFILE
   %% =====================
-  PROFILE --> PINFO[ID + Имя + Баланс]
+  PROFILE --> PINFO[ID + Имя + Баланс USD + Free Spins]
   PINFO --> PACTIONS{Действия}
 
   PACTIONS --> TOPUP[Пополнить баланс]
@@ -25,52 +23,10 @@ flowchart TD
   PACTIONS --> REF[Реферальная система]
   PACTIONS --> PROMO[Промокод]
   PACTIONS --> HIST[История пополнений]
-
-  %% ---- TOP UP ----
-  TOPUP --> TSUM[Ввести сумму]
-  TSUM --> TMETHOD{Способ оплаты}
-  TMETHOD --> TCB[CryptoBot API]
-  TMETHOD --> TCR[Криптовалюта API]
-  TCB --> TPAY[Создать платёж]
-  TCR --> TPAY
-  TPAY --> TWAIT{Оплата подтверждена?}
-  TWAIT -- Нет --> TWAIT
-  TWAIT -- Да --> TADD[+ Баланс]
-  TADD --> PROFILE
-
-  %% ---- TRANSFER ----
-  TRANSFER --> TUSER[Ввести @username]
-  TUSER --> TFOUND{Пользователь найден?}
-  TFOUND -- Нет --> TERR[Ошибка]
-  TFOUND -- Да --> TAMOUNT[Ввести сумму]
-  TAMOUNT --> TCONFIRM{Подтвердить?}
-  TCONFIRM -- Отмена --> PROFILE
-  TCONFIRM -- Да --> TBAL{Хватает баланса?}
-  TBAL -- Нет --> TERR
-  TBAL -- Да --> TTX[Списать / Зачислить]
-  TTX --> PROFILE
-
-  %% ---- REFERRAL ----
-  REF --> RINFO[Реф. ссылка + статистика]
-  RINFO --> RCOND[Условия]
-  RINFO --> RSTAT[Приглашённые]
-  RINFO --> RBONUS[Бонусы → баланс]
-  RBONUS --> PROFILE
-
-  %% ---- PROMO ----
-  PROMO --> PCODE[Ввести промокод]
-  PCODE --> PVALID{Промокод валиден?}
-  PVALID -- Нет --> PROFILE
-  PVALID -- Да --> PREWARD[Начислить бонус / скидку]
-  PREWARD --> PROFILE
-
-  %% ---- HISTORY ----
-  HIST --> HLIST[Список пополнений]
-  HLIST --> HDETAIL[Детали операции]
-  HDETAIL --> PROFILE
+  PACTIONS --> ORDERS[Мои заказы]
 
   %% =====================
-  %% MARKET ACC
+  %% MARKET ACC (С БОНУСОМ И SPIN)
   %% =====================
   MARKET --> MCAT[Категории]
   MCAT --> DRAW[DRAW]
@@ -84,25 +40,72 @@ flowchart TD
 
   MQTY --> MSTOCK{Есть в наличии?}
   MSTOCK -- Нет --> MERR[Ошибка]
-  MSTOCK -- Да --> MBAL{Хватает баланса?}
+  MSTOCK -- Да --> MBAL{Хватает баланса USD?}
   MBAL -- Нет --> MERR
   MBAL -- Да --> MCONFIRM{Подтвердить покупку?}
 
   MCONFIRM -- Отмена --> MARKET
   MCONFIRM -- Да --> MTX[Списать баланс / Выдать товар]
-  MTX --> MARKET
+
+  %% ---- ORDER CREATED ----
+  MTX --> MORDER[Создать заказ (order_id)\nСтатус: DELIVERED]
+  MORDER --> MWAR[Запустить гарантию 1 час]
+  MORDER --> MBON[Начислить бонус 0.12–0.15GB\nСтатус: PENDING\nTTL 30 дней\nCap: 1GB]
+
+  %% ---- FREE SPIN ACCRUAL ----
+  MORDER --> MCOUNT[Добавить сумму в turnover_counter]
+  MCOUNT --> MSPINCHK{counter >= 10$ ?}
+  MSPINCHK -- Нет --> MARKET
+  MSPINCHK -- Да --> MGIVE[+1 Free Spin\ncounter -= 10]
+  MGIVE --> MSPINCHK
 
   %% =====================
-  %% SM MAKRET
+  %% CLAIMS / WARRANTY
   %% =====================
-  SMM --> SMCAT[Категории]
-  SMCAT --> SMLIST[Товары]
-  SMLIST --> SMITEM[Карточка]
-  SMITEM --> SMQTY[Кол-во / пакет]
-  SMQTY --> SMBAL{Хватает баланса?}
-  SMBAL -- Нет --> MERR
-  SMBAL -- Да --> SMTX[Списать / Выдать]
-  SMTX --> SMM
+  ORDERS --> OLIST[Список заказов]
+  OLIST --> ODETAIL[Детали заказа]
+  ODETAIL --> OPROB[Проблема с товаром]
+
+  OPROB --> OCLM[Создать претензию]
+  OCLM --> OWIN{В пределах 1 часа?}
+
+  OWIN -- Да --> OHOLD[Статус: DISPUTED\nБонус -> FROZEN]
+  OWIN -- Нет --> OMAN[Ручной разбор]
+
+  OHOLD --> ODEC{Решение}
+  OMAN --> ODEC
+
+  ODEC -- Валид --> OCONF[RESOLVED_OK\nБонус -> CONFIRMED]
+  ODEC -- Возврат --> OREF[RESOLVED_REFUND\n+USD\nБонус -> REVOKED]
+  ODEC -- Замена --> ORPL[RESOLVED_REPLACE\nВыдать замену\nБонус -> REVOKED]
+
+  %% =====================
+  %% PROXY MODULE
+  %% =====================
+  PROXY --> PBALVIEW[Баланс GB\nBonus / Purchased]
+  PBALVIEW --> PA{Действия}
+
+  PA --> PBUY[Купить GB]
+  PA --> PGEN[Сгенерировать прокси]
+
+  %% BUY GB
+  PBUY --> PPACK[1GB / 5GB / 10GB]
+  PPACK --> PBCONF{Подтвердить?}
+  PBCONF -- Нет --> PROXY
+  PBCONF -- Да --> PBUSD{Хватает USD?}
+  PBUSD -- Нет --> MERR
+  PBUSD -- Да --> PBTX[Списать USD\n+Purchased GB]
+  PBTX --> PROXY
+
+  %% GENERATE
+  PGEN --> PSET[Тип + Гео + Кол-во]
+  PSET --> PCONF{Подтвердить?}
+  PCONF -- Нет --> PROXY
+  PCONF -- Да --> PGB{Хватает GB?}
+  PGB -- Нет --> MERR
+  PGB -- Да --> PSPLIT[Списать GB приоритет:\n1) PENDING/FROZEN\n2) CONFIRMED\n3) PURCHASED]
+  PSPLIT --> POUT[Выдать прокси]
+  POUT --> PROXY
 
   %% =====================
   %% VPN
@@ -110,23 +113,36 @@ flowchart TD
   VPN --> VTARIFF[Тарифы]
   VTARIFF --> VCONF{Подтвердить?}
   VCONF -- Нет --> VPN
-  VCONF -- Да --> VBAL{Хватает баланса?}
+  VCONF -- Да --> VBAL{Хватает USD?}
   VBAL -- Нет --> MERR
-  VBAL -- Да --> VTX[Создать доступ / выдать конфиг]
+  VBAL -- Да --> VTX[Выдать доступ]
   VTX --> VPN
 
   %% =====================
-  %% PROXY
+  %% WHEEL
   %% =====================
-  PROXY --> PTYPE[Тип прокси]
-  PTYPE --> PGEO[Гео]
-  PGEO --> PTERM[Срок / кол-во]
-  PTERM --> PCONF{Подтвердить?}
-  PCONF -- Нет --> PROXY
-  PCONF -- Да --> PBAL{Хватает баланса?}
-  PBAL -- Нет --> MERR
-  PBAL -- Да --> PTX[Резерв / выдать прокси]
-  PTX --> PROXY
+  WHEEL --> WMODE{Режим}
+
+  WMODE --> WFREE[Free Spin]
+  WMODE --> WPAID[Paid Spin 1$]
+
+  %% FREE
+  WFREE --> WCHKFREE{Есть Free Spins?}
+  WCHKFREE -- Нет --> WHEEL
+  WCHKFREE -- Да --> WUSE[-1 Spin]
+  WUSE --> WFPRIZE[Приз без пусто:\nProxy GB / VPN дни / $]
+  WFPRIZE --> WHEEL
+
+  %% PAID
+  WPAID --> WCHK{Хватает 1$?}
+  WCHK -- Нет --> MERR
+  WCHK -- Да --> WDEBIT[Списать 1$]
+  WDEBIT --> WSPIN[Крутить]
+  WSPIN --> WRES{Результат}
+  WRES --> WEMPTY[Не повезло]
+  WRES --> WPRIZE[Proxy / VPN / $ / Джекпот]
+  WEMPTY --> WHEEL
+  WPRIZE --> WHEEL
 
   %% =====================
   %% ERRORS
