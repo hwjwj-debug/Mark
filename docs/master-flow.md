@@ -1,119 +1,105 @@
+# Telegram Bot — MASTER FLOW FINAL
 flowchart TD
 
-  A[/start] --> MENU{Главное меню}
+A[Start] --> MENU{Main Menu}
 
-  MENU --> MARKET[MARKET ACC]
-  MENU --> SMM[SM MARKET]
-  MENU --> VPN[VPN]
-  MENU --> PROXY[PROXY]
-  MENU --> WHEEL[Крутилка]
-  MENU --> PROFILE[Профиль]
+MENU --> MARKET[Market Acc]
+MENU --> SMM[SM Market]
+MENU --> VPN[VPN]
+MENU --> PROXY[Proxy]
+MENU --> WHEEL[Wheel]
+MENU --> PROFILE[Profile]
 
-  PROFILE --> PINFO[ID Имя Баланс USD Free Spins]
-  PINFO --> PACTIONS{Действия}
+PROFILE --> PINFO[User Info]
+PINFO --> PACTIONS{Actions}
 
-  PACTIONS --> TOPUP[Пополнить баланс]
-  PACTIONS --> TRANSFER[Перевести баланс]
-  PACTIONS --> REF[Реферальная система]
-  PACTIONS --> PROMO[Промокод]
-  PACTIONS --> HIST[История]
-  PACTIONS --> ORDERS[Мои заказы]
+PACTIONS --> TOPUP[Top Up]
+PACTIONS --> TRANSFER[Transfer]
+PACTIONS --> REF[Referral]
+PACTIONS --> PROMO[Promo]
+PACTIONS --> HIST[History]
+PACTIONS --> ORDERS[Orders]
 
-  MARKET --> MCAT[Категории]
-  MCAT --> DRAW[DRAW]
-  MCAT --> FORPOST[FORPOST]
+MARKET --> MCAT[Categories]
+MCAT --> MLIST[Products]
+MLIST --> MITEM[Item]
+MITEM --> MQTY[Quantity]
 
-  DRAW --> MLIST[Список товаров]
-  FORPOST --> MLIST
+MQTY --> MSTOCK{In stock}
+MSTOCK -- No --> ERR[Error]
+MSTOCK -- Yes --> MBAL{Enough balance}
+MBAL -- No --> ERR
+MBAL -- Yes --> MCONF{Confirm}
 
-  MLIST --> MITEM[Карточка товара]
-  MITEM --> MQTY[Количество]
+MCONF -- No --> MARKET
+MCONF -- Yes --> MTX[Debit balance and deliver]
 
-  MQTY --> MSTOCK{Есть в наличии?}
-  MSTOCK -- Нет --> MERR[Ошибка]
-  MSTOCK -- Да --> MBAL{Хватает USD?}
-  MBAL -- Нет --> MERR
-  MBAL -- Да --> MCONFIRM{Подтвердить покупку?}
+MTX --> MORDER[Create order]
+MORDER --> MWAR[Start warranty 1h]
+MORDER --> MBON[Add bonus proxy GB pending]
 
-  MCONFIRM -- Нет --> MARKET
-  MCONFIRM -- Да --> MTX[Списать баланс и выдать товар]
+MORDER --> MCOUNT[Add to turnover counter]
+MCOUNT --> MSPIN{Counter >= 10}
+MSPIN -- No --> MARKET
+MSPIN -- Yes --> MGIVE[Add free spin and minus 10]
+MGIVE --> MSPIN
 
-  MTX --> MORDER[Создать заказ статус DELIVERED]
-  MORDER --> MWAR[Запустить гарантию 1 час]
-  MORDER --> MBON[Начислить бонус 0.12-0.15GB статус PENDING TTL 30 дней]
+ORDERS --> ODETAIL[Order detail]
+ODETAIL --> OCLM[Create claim]
+OCLM --> OTIME{Within 1h}
 
-  MORDER --> MCOUNT[Добавить сумму в turnover_counter]
-  MCOUNT --> MSPINCHK{counter >= 10?}
-  MSPINCHK -- Нет --> MARKET
-  MSPINCHK -- Да --> MGIVE[+1 Free Spin и counter -10]
-  MGIVE --> MSPINCHK
+OTIME -- Yes --> ODIS[Status disputed bonus frozen]
+OTIME -- No --> OMAN[Manual review]
 
-  ORDERS --> OLIST[Список заказов]
-  OLIST --> ODETAIL[Детали заказа]
-  ODETAIL --> OPROB[Проблема с товаром]
+ODIS --> ODEC{Decision}
+OMAN --> ODEC
 
-  OPROB --> OCLM[Создать претензию]
-  OCLM --> OWIN{В пределах 1 часа?}
+ODEC -- Valid --> OOK[Resolved ok bonus confirmed]
+ODEC -- Refund --> OREF[Refund and bonus revoked]
+ODEC -- Replace --> OREP[Replace and bonus revoked]
 
-  OWIN -- Да --> OHOLD[Статус DISPUTED бонус FROZEN]
-  OWIN -- Нет --> OMAN[Ручной разбор]
+PROXY --> PBAL[Proxy balance]
+PBAL --> PBUY[Buy GB]
+PBAL --> PGEN[Generate proxy]
 
-  OHOLD --> ODEC{Решение}
-  OMAN --> ODEC
+PBUY --> PBCONF{Confirm}
+PBCONF -- No --> PROXY
+PBCONF -- Yes --> PBTX[Debit USD add GB]
+PBTX --> PROXY
 
-  ODEC -- Валид --> OCONF[RESOLVED_OK бонус CONFIRMED]
-  ODEC -- Возврат --> OREF[RESOLVED_REFUND начислить USD бонус REVOKED]
-  ODEC -- Замена --> ORPL[RESOLVED_REPLACE выдать замену бонус REVOKED]
+PGEN --> PCONF{Confirm}
+PCONF -- No --> PROXY
+PCONF -- Yes --> PGB{Enough GB}
+PGB -- No --> ERR
+PGB -- Yes --> POUT[Deliver proxy]
+POUT --> PROXY
 
-  PROXY --> PBALVIEW[Баланс GB bonus purchased]
-  PBALVIEW --> PA{Действия}
+VPN --> VTAR[Tариф]
+VTAR --> VCONF{Confirm}
+VCONF -- No --> VPN
+VCONF -- Yes --> VBAL{Enough balance}
+VBAL -- No --> ERR
+VBAL -- Yes --> VTX[Deliver VPN]
+VTX --> VPN
 
-  PA --> PBUY[Купить GB]
-  PA --> PGEN[Сгенерировать прокси]
+WHEEL --> WMODE{Mode}
+WMODE --> WFREE[Free Spin]
+WMODE --> WPAID[Paid Spin]
 
-  PBUY --> PPACK[1GB 5GB 10GB]
-  PPACK --> PBCONF{Подтвердить?}
-  PBCONF -- Нет --> PROXY
-  PBCONF -- Да --> PBUSD{Хватает USD?}
-  PBUSD -- Нет --> MERR
-  PBUSD -- Да --> PBTX[Списать USD и начислить GB]
-  PBTX --> PROXY
+WFREE --> WCHK{Have spins}
+WCHK -- No --> WHEEL
+WCHK -- Yes --> WUSE[Use spin]
+WUSE --> WPRIZE[Prize]
+WPRIZE --> WHEEL
 
-  PGEN --> PSET[Тип Гео Количество]
-  PSET --> PCONF{Подтвердить?}
-  PCONF -- Нет --> PROXY
-  PCONF -- Да --> PGB{Хватает GB?}
-  PGB -- Нет --> MERR
-  PGB -- Да --> PSPLIT[Списать GB приоритет bonus затем purchased]
-  PSPLIT --> POUT[Выдать прокси]
-  POUT --> PROXY
+WPAID --> WCHK2{Enough 1 USD}
+WCHK2 -- No --> ERR
+WCHK2 -- Yes --> WDEBIT[Debit 1 USD]
+WDEBIT --> WSPIN[Spin]
+WSPIN --> WRES{Result}
+WRES --> WEMPTY[Empty]
+WRES --> WPR[Prize]
+WEMPTY --> WHEEL
+WPR --> WHEEL
 
-  VPN --> VTARIFF[Тарифы]
-  VTARIFF --> VCONF{Подтвердить?}
-  VCONF -- Нет --> VPN
-  VCONF -- Да --> VBAL{Хватает USD?}
-  VBAL -- Нет --> MERR
-  VBAL -- Да --> VTX[Выдать доступ]
-  VTX --> VPN
-
-  WHEEL --> WMODE{Режим}
-  WMODE --> WFREE[Free Spin]
-  WMODE --> WPAID[Paid Spin 1 USD]
-
-  WFREE --> WCHKFREE{Есть Free Spins?}
-  WCHKFREE -- Нет --> WHEEL
-  WCHKFREE -- Да --> WUSE[-1 Spin]
-  WUSE --> WFPRIZE[Приз proxy vpn или USD]
-  WFPRIZE --> WHEEL
-
-  WPAID --> WCHK{Хватает 1 USD?}
-  WCHK -- Нет --> MERR
-  WCHK -- Да --> WDEBIT[Списать 1 USD]
-  WDEBIT --> WSPIN[Крутить]
-  WSPIN --> WRES{Результат}
-  WRES --> WEMPTY[Не повезло]
-  WRES --> WPRIZE[Proxy VPN USD или Джекпот]
-  WEMPTY --> WHEEL
-  WPRIZE --> WHEEL
-
-  MERR[Сообщение об ошибке]
+ERR[Error message]
