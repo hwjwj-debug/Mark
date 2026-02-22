@@ -26,7 +26,7 @@ flowchart TD
   PACTIONS --> ORDERS[Мои заказы]
 
   %% =====================
-  %% MARKET ACC (С БОНУСОМ И SPIN)
+  %% MARKET ACC
   %% =====================
   MARKET --> MCAT[Категории]
   MCAT --> DRAW[DRAW]
@@ -88,7 +88,6 @@ flowchart TD
   PA --> PBUY[Купить GB]
   PA --> PGEN[Сгенерировать прокси]
 
-  %% BUY GB
   PBUY --> PPACK[1GB / 5GB / 10GB]
   PPACK --> PBCONF{Подтвердить?}
   PBCONF -- Нет --> PROXY
@@ -97,7 +96,6 @@ flowchart TD
   PBUSD -- Да --> PBTX[Списать USD\n+Purchased GB]
   PBTX --> PROXY
 
-  %% GENERATE
   PGEN --> PSET[Тип + Гео + Кол-во]
   PSET --> PCONF{Подтвердить?}
   PCONF -- Нет --> PROXY
@@ -126,14 +124,12 @@ flowchart TD
   WMODE --> WFREE[Free Spin]
   WMODE --> WPAID[Paid Spin 1$]
 
-  %% FREE
   WFREE --> WCHKFREE{Есть Free Spins?}
   WCHKFREE -- Нет --> WHEEL
   WCHKFREE -- Да --> WUSE[-1 Spin]
   WUSE --> WFPRIZE[Приз без пусто:\nProxy GB / VPN дни / $]
   WFPRIZE --> WHEEL
 
-  %% PAID
   WPAID --> WCHK{Хватает 1$?}
   WCHK -- Нет --> MERR
   WCHK -- Да --> WDEBIT[Списать 1$]
